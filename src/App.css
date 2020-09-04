@@ -6,6 +6,15 @@
   height: 40vmin;
   pointer-events: none;
 }
+.App form{
+  text-align: left;
+}
+.list-table{
+  text-align: left;
+}
+p{
+  color: red;
+}
 
 @media (prefers-reduced-motion: no-preference) {
   .App-logo {
