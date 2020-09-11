@@ -1,7 +1,28 @@
 import React from 'react';
+import {connect} from "react-redux";
+import * as actions from "../actions";
 
-function CustomerList({customers,onDelete,onUpdate}) {
-    const elements = customers.map((customer, index) => {
+function CustomerList({customers, onDelete, onShowForm, onEdit, keyword, sort}) {
+    let customerEditing;
+
+    function findIndex(id) {
+        let result = -1;
+        customers.forEach((customer, index) => {
+            if (customer.id === id) {
+                result = index
+            }
+        });
+        return result;
+    }
+
+    if (keyword) {
+        customerEditing = customers.filter((customer) => {
+            return customer.name.toLowerCase().indexOf(keyword.toLowerCase()) !== -1
+        })
+    } else {
+        customerEditing = customers
+    }
+    const elements = customerEditing.map((customer, index) => {
         let result;
         result = <tr key={index}>
             <th scope="row">{index + 1}</th>
@@ -19,12 +40,21 @@ function CustomerList({customers,onDelete,onUpdate}) {
         </tr>;
         return result
     });
-    const deleteCustomer = (index) => {
-        onDelete(index);
+    const deleteCustomer = (id) => {
+        let index = findIndex(id);
+        onDelete(customers[index]);
     };
-    const updateCustomer = (index) => {
-        onUpdate(index);
+    const updateCustomer = (id) => {
+        onShowForm();
+        let index = findIndex(id);
+        onEdit(customers[index])
     };
+    customers.sort((a, b) => {
+        if (a.name < b.name) return sort;
+        else if (a.name > b.name) return -sort;
+        else return 0
+    });
+
     return (
         <div>
             <table className="table">
@@ -48,4 +78,26 @@ function CustomerList({customers,onDelete,onUpdate}) {
     );
 }
 
-export default CustomerList;
+const mapStateToProps = (state) => {
+    return {
+        customers: state.customers,
+        keyword: state.search,
+        sort: state.sort,
+
+    }
+};
+
+const mapDispatchToProps = (dispatch, props) => {
+    return {
+        onShowForm: () => {
+            dispatch(actions.showForm())
+        },
+        onDelete: (customer) => {
+            dispatch(actions.deleteCustomer(customer))
+        },
+        onEdit: (customer) => {
+            dispatch(actions.editCustomer(customer))
+        }
+    }
+};
+export default (connect(mapStateToProps, mapDispatchToProps))(CustomerList);

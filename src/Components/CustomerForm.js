@@ -1,29 +1,29 @@
 import React, {useEffect, useState} from 'react';
-import {useForm} from "react-hook-form";
-import {yupResolver} from '@hookform/resolvers';
-import * as yup from "yup";
 
-function CustomerForm({onHandleSubmit, customerEditing, closeForm}) {
-    const schema = yup.object().shape({
-        name: yup.string().required(),
-        gender: yup.string().required(),
-        age: yup.number().required(),
-        address: yup.string().required(),
-        room: yup.string().required(),
-    });
+import {connect} from "react-redux";
+import * as actions from './../actions/index'
+
+function CustomerForm({onSave, customerEditing, onCloseForm,isDisplayForm}) {
+    // const schema = yup.object().shape({
+    //     name: yup.string().required(),
+    //     gender: yup.string().required(),
+    //     age: yup.number().required(),
+    //     address: yup.string().required(),
+    //     room: yup.string().required(),
+    // });
     const [id, setId] = useState('');
     const [name, setName] = useState('');
     const [gender, setGender] = useState('male');
     const [age, setAge] = useState('');
     const [address, setAddress] = useState('');
     const [room, setRoom] = useState('1');
-    const {register, handleSubmit, errors} = useForm({
-        resolver: yupResolver(schema)
-    });
+    // const {register, handleSubmit, errors} = useForm({
+    //     resolver: yupResolver(schema)
+    // });
 
-    const onSubmit = event => {
+    function onSubmit(event) {
         event.preventDefault();
-        const formValue = {
+        const customer = {
             id: id,
             name: name,
             gender: gender,
@@ -31,9 +31,10 @@ function CustomerForm({onHandleSubmit, customerEditing, closeForm}) {
             address: address,
             room: room
         };
-        onHandleSubmit(formValue);
-        clearForm()
-    };
+        onSave(customer);
+        clearForm();
+        closeForm();
+    }
 
     function clearForm() {
         setId('');
@@ -44,16 +45,20 @@ function CustomerForm({onHandleSubmit, customerEditing, closeForm}) {
         setRoom('1')
     }
 
+    function closeForm() {
+        onCloseForm();
+    }
+
 
     useEffect(() => {
-        // const {id, name, gender, age, address, room} = customerEditing;
+        const {id, name, gender, age, address, room} = customerEditing;
         if (customerEditing) {
-            setId(customerEditing.id);
-            setName(customerEditing.name);
-            setGender(customerEditing.gender);
-            setAge(customerEditing.age);
-            setAddress(customerEditing.address);
-            setRoom(customerEditing.room);
+            setId(id);
+            setName(name);
+            setGender(gender);
+            setAge(age);
+            setAddress(address);
+            setRoom(room);
         } else {
             setId('');
             setName('');
@@ -63,50 +68,47 @@ function CustomerForm({onHandleSubmit, customerEditing, closeForm}) {
             setRoom('1')
         }
     }, [customerEditing]);
-
+    if (!isDisplayForm){
+        return null;
+    }
     return (
         <div>
-            <form onSubmit={handleSubmit(onSubmit)}>
+            <form onSubmit={onSubmit}>
                 <div className="form-group">
                     <label>Tên nhân viên</label>
                     <input type="text" className="form-control" name="name" onChange={(e) => setName(e.target.value)}
-                           value={name} ref={register({required: true})}/>
-                    <p>{errors.name?.message}</p>
+                           value={name}/>
                 </div>
                 <div className="form-group">
                     <label>Giới tính</label><br/>
                     <label><input type="radio" name="gender" value="male"
                                   onChange={(e) => setGender(e.target.value)}
-                                  checked={gender === "male"} ref={register({required: true})}/>Nam</label>
+                                  checked={gender === "male"}/>Nam</label>
                     <label><input type="radio" name="gender" value="women"
                                   onChange={(e) => setGender(e.target.value)}
-                                  checked={gender === "women"} ref={register({required: true})}/>Nữ</label>
-                    <p>{errors.gender?.message}</p>
+                                  checked={gender === "women"} />Nữ</label>
 
                 </div>
                 <div className="form-group">
                     <label>Tuổi</label>
                     <input type="text" className="form-control" name="age" onChange={(e) => setAge(e.target.value)}
-                           value={age} ref={register({required: true})}/>
-                    <p>{errors.age?.message}</p>
+                           value={age} />
 
                 </div>
                 <div className="form-group">
                     <label>Địa chỉ</label>
                     <input type="text" className="form-control" name="address"
                            onChange={(e) => setAddress(e.target.value)}
-                           value={address} ref={register({required: true})}/>
-                    <p>{errors.address?.message}</p>
+                           value={address} />
 
                 </div>
                 <div className="form-group">
                     <label>Phòng ban</label>
                     <select className="form-control" name="room" onChange={(e) => setRoom(e.target.value)}
-                            value={room} ref={register({required: true})}>
+                            value={room} >
                         <option>Phòng kế toán</option>
                         <option>Phòng nhân sự</option>
                     </select>
-                    <p>{errors.room?.message}</p>
 
                 </div>
                 <button type="submit" className="btn btn-primary">Lưu</button>
@@ -116,4 +118,24 @@ function CustomerForm({onHandleSubmit, customerEditing, closeForm}) {
     );
 }
 
-export default CustomerForm;
+const mapStateToProps = (state) => {
+    return {
+        customerEditing:state.customerEditing,
+        isDisplayForm:state.isDisplayForm
+
+    }
+};
+
+const mapDispatchToProps = (dispatch, props) => {
+    return {
+        onSave: (customer) => {
+            dispatch(actions.saveCustomer(customer))
+        },
+        onCloseForm: () => {
+            dispatch(actions.closeForm())
+        },
+
+    }
+};
+
+export default (connect(mapStateToProps, mapDispatchToProps))(CustomerForm);
